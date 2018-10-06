@@ -12,11 +12,10 @@ namespace drone_UDP
 {
     public class BebopCommand
     {
-        private int[] _seq = new int[256];
-        private Command _cmd;
+        private readonly int[] _seq = new int[256];
         private PCMD _pcmd;
 
-        private CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private CancellationToken _cancelToken;
 
         private UdpClient _arstreamClient;
@@ -24,8 +23,7 @@ namespace drone_UDP
 
         private UdpClient _d2CClient;
 
-        private byte[] _receivedData;
-        private static object _thisLock = new object();
+        private static readonly object ThisLock = new object();
 
 
         //int frameCount = 0;
@@ -65,7 +63,6 @@ namespace drone_UDP
                     Console.WriteLine("The message from the drone shows: " + receiveMessage);
 
                     //initialize
-                    _cmd = default(Command);
                     _pcmd = default(PCMD);
 
                     //All State setting
@@ -116,31 +113,31 @@ namespace drone_UDP
         public void Takeoff()
         {
             Console.WriteLine("try to takeoff ing...");
-            _cmd = default(Command);
-            _cmd.size = 4;
-            _cmd.cmd = new byte[4];
+            var cmd = default(Command);
+            cmd.size = 4;
+            cmd.cmd = new byte[4];
 
-            _cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
-            _cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING;
-            _cmd.cmd[2] = CommandSet.ARCOMMANDS_ID_ARDRONE3_PILOTING_CMD_TAKEOFF;
-            _cmd.cmd[3] = 0;
+            cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
+            cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING;
+            cmd.cmd[2] = CommandSet.ARCOMMANDS_ID_ARDRONE3_PILOTING_CMD_TAKEOFF;
+            cmd.cmd[3] = 0;
 
-            SendCommandAdpator(ref _cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
+            SendCommandAdpator(ref cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
         }
 
         public void Landing()
         {
             Console.WriteLine("try to landing...");
-            _cmd = default(Command);
-            _cmd.size = 4;
-            _cmd.cmd = new byte[4];
+            var cmd = default(Command);
+            cmd.size = 4;
+            cmd.cmd = new byte[4];
 
-            _cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
-            _cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING;
-            _cmd.cmd[2] = CommandSet.ARCOMMANDS_ID_ARDRONE3_PILOTING_CMD_LANDING;
-            _cmd.cmd[3] = 0;
+            cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
+            cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING;
+            cmd.cmd[2] = CommandSet.ARCOMMANDS_ID_ARDRONE3_PILOTING_CMD_LANDING;
+            cmd.cmd[3] = 0;
 
-            SendCommandAdpator(ref _cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
+            SendCommandAdpator(ref cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
         }
 
         public void Move(int flag, int roll, int pitch, int yaw, int gaz)
@@ -163,41 +160,41 @@ namespace drone_UDP
 
         public void GeneratePcmd()
         {
-            lock (_thisLock)
+            lock (ThisLock)
             {
-                _cmd = default(Command);
-                _cmd.size = 13;
-                _cmd.cmd = new byte[13];
+                var cmd = default(Command);
+                cmd.size = 13;
+                cmd.cmd = new byte[13];
 
-                _cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
-                _cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING;
-                _cmd.cmd[2] = CommandSet.ARCOMMANDS_ID_ARDRONE3_PILOTING_CMD_PCMD;
-                _cmd.cmd[3] = 0;
+                cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
+                cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_PILOTING;
+                cmd.cmd[2] = CommandSet.ARCOMMANDS_ID_ARDRONE3_PILOTING_CMD_PCMD;
+                cmd.cmd[3] = 0;
 
-                _cmd.cmd[4] = (byte) _pcmd.flag; // flag
-                _cmd.cmd[5] =
+                cmd.cmd[4] = (byte) _pcmd.flag; // flag
+                cmd.cmd[5] =
                     (_pcmd.roll >= 0)
                         ? (byte) _pcmd.roll
                         : (byte) (256 + _pcmd.roll); // roll: fly left or right [-100 ~ 100]
-                _cmd.cmd[6] =
+                cmd.cmd[6] =
                     (_pcmd.pitch >= 0)
                         ? (byte) _pcmd.pitch
                         : (byte) (256 + _pcmd.pitch); // pitch: backward or forward [-100 ~ 100]
-                _cmd.cmd[7] =
+                cmd.cmd[7] =
                     (_pcmd.yaw >= 0)
                         ? (byte) _pcmd.yaw
                         : (byte) (256 + _pcmd.yaw); // yaw: rotate left or right [-100 ~ 100]
-                _cmd.cmd[8] =
+                cmd.cmd[8] =
                     (_pcmd.gaz >= 0) ? (byte) _pcmd.gaz : (byte) (256 + _pcmd.gaz); // gaze: down or up [-100 ~ 100]
 
 
                 // for Debug Mode
-                _cmd.cmd[9] = 0;
-                _cmd.cmd[10] = 0;
-                _cmd.cmd[11] = 0;
-                _cmd.cmd[12] = 0;
+                cmd.cmd[9] = 0;
+                cmd.cmd[10] = 0;
+                cmd.cmd[11] = 0;
+                cmd.cmd[12] = 0;
 
-                SendCommandAdpator(ref _cmd);
+                SendCommandAdpator(ref cmd);
             }
         }
 
@@ -226,47 +223,47 @@ namespace drone_UDP
         public void GenerateAllStates()
         {
             Console.WriteLine("Generate All State");
-            _cmd = default(Command);
-            _cmd.size = 4;
-            _cmd.cmd = new byte[4];
+            var cmd = default(Command);
+            cmd.size = 4;
+            cmd.cmd = new byte[4];
 
-            _cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_COMMON;
-            _cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_COMMON_CLASS_COMMON;
-            _cmd.cmd[2] = (CommandSet.ARCOMMANDS_ID_COMMON_COMMON_CMD_ALLSTATES & 0xff);
-            _cmd.cmd[3] = (CommandSet.ARCOMMANDS_ID_COMMON_COMMON_CMD_ALLSTATES & 0xff00 >> 8);
+            cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_COMMON;
+            cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_COMMON_CLASS_COMMON;
+            cmd.cmd[2] = (CommandSet.ARCOMMANDS_ID_COMMON_COMMON_CMD_ALLSTATES & 0xff);
+            cmd.cmd[3] = (CommandSet.ARCOMMANDS_ID_COMMON_COMMON_CMD_ALLSTATES & 0xff00 >> 8);
 
-            SendCommandAdpator(ref _cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
+            SendCommandAdpator(ref cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
         }
 
         public void GenerateAllSettings()
         {
             Console.WriteLine("Generate All Settings");
-            _cmd = default(Command);
-            _cmd.size = 4;
-            _cmd.cmd = new byte[4];
+            var cmd = default(Command);
+            cmd.size = 4;
+            cmd.cmd = new byte[4];
 
-            _cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_COMMON;
-            _cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_COMMON_CLASS_SETTINGS;
-            _cmd.cmd[2] = (0 & 0xff); // ARCOMMANDS_ID_COMMON_CLASS_SETTINGS_CMD_ALLSETTINGS = 0
-            _cmd.cmd[3] = (0 & 0xff00 >> 8);
+            cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_COMMON;
+            cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_COMMON_CLASS_SETTINGS;
+            cmd.cmd[2] = (0 & 0xff); // ARCOMMANDS_ID_COMMON_CLASS_SETTINGS_CMD_ALLSETTINGS = 0
+            cmd.cmd[3] = (0 & 0xff00 >> 8);
 
-            SendCommandAdpator(ref _cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
+            SendCommandAdpator(ref cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
         }
 
         public void VideoEnable()
         {
             Console.WriteLine("Send Video Enable Command");
-            _cmd = default(Command);
-            _cmd.size = 5;
-            _cmd.cmd = new byte[5];
+            var cmd = default(Command);
+            cmd.size = 5;
+            cmd.cmd = new byte[5];
 
-            _cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
-            _cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_MEDIASTREAMING;
-            _cmd.cmd[2] = (0 & 0xff); // ARCOMMANDS_ID_COMMON_CLASS_SETTINGS_CMD_VIDEOENABLE = 0
-            _cmd.cmd[3] = (0 & 0xff00 >> 8);
-            _cmd.cmd[4] = 1; //arg: Enable
+            cmd.cmd[0] = CommandSet.ARCOMMANDS_ID_PROJECT_ARDRONE3;
+            cmd.cmd[1] = CommandSet.ARCOMMANDS_ID_ARDRONE3_CLASS_MEDIASTREAMING;
+            cmd.cmd[2] = (0 & 0xff); // ARCOMMANDS_ID_COMMON_CLASS_SETTINGS_CMD_VIDEOENABLE = 0
+            cmd.cmd[3] = (0 & 0xff00 >> 8);
+            cmd.cmd[4] = 1; //arg: Enable
 
-            SendCommandAdpator(ref _cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
+            SendCommandAdpator(ref cmd, CommandSet.ARNETWORKAL_FRAME_TYPE_DATA_WITH_ACK, CommandSet.BD_NET_CD_ACK_ID);
         }
 
         public void InitArStream()
@@ -279,8 +276,8 @@ namespace drone_UDP
         {
             //Console.WriteLine("Receiving...");
 
-            _receivedData = _arstreamClient.Receive(ref _remoteIpEndPoint);
-            Console.WriteLine("Receive Data: " + BitConverter.ToString(_receivedData));
+            var receivedData = _arstreamClient.Receive(ref _remoteIpEndPoint);
+            Console.WriteLine("Receive Data: " + BitConverter.ToString(receivedData));
             //frameCount++;
             //arstreamClient.BeginReceive(new AsyncCallback(recvData), null);
         }
