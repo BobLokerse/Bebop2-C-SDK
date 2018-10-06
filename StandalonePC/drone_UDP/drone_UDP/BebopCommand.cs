@@ -35,7 +35,7 @@ namespace drone_UDP
 
 		//int frameCount = 0;
 
-
+         
 		public int Discover() {
             Console.WriteLine("Discovering...");
 
@@ -43,55 +43,55 @@ namespace drone_UDP
 
 
 			//make handshake with TCP_client, and the port is set to be 4444
-			TcpClient tcpClient = new TcpClient(CommandSet.IP, CommandSet.DISCOVERY_PORT);
-            NetworkStream stream = new NetworkStream(tcpClient.Client);
+		    using (var tcpClient = new TcpClient(CommandSet.IP, CommandSet.DISCOVERY_PORT))
+		    {
+		        var stream = new NetworkStream(tcpClient.Client);
 
-            //initialize reader and writer
-            StreamWriter streamWriter = new StreamWriter(stream);
-            StreamReader streamReader = new StreamReader(stream);
+		        //initialize reader and writer
+		        StreamWriter streamWriter = new StreamWriter(stream);
+		        StreamReader streamReader = new StreamReader(stream);
 
-			//when the drone receive the message bellow, it will return the confirmation
-			string handshake_Message = "{\"controller_type\":\"computer\", \"controller_name\":\"halley\", \"d2c_port\":\"43210\", \"arstream2_client_stream_port\":\"55004\", \"arstream2_client_control_port\":\"55005\"}";
-            streamWriter.WriteLine(handshake_Message);
-            streamWriter.Flush();
-            
-        
-
-
-            string receive_Message = streamReader.ReadLine();
-            if (receive_Message == null)
-            {
-                Console.WriteLine("Discover failed");
-                return -1;
-            }
-            else {
-                Console.WriteLine("The message from the drone shows: " + receive_Message);
-
-				//initialize
-				cmd = default(Command);
-				pcmd = default(PCMD);
-
-				//All State setting
-				generateAllStates();
-                generateAllSettings();
-
-				//enable video streaming
-				videoEnable();
-
-				//init ARStream
-				//initARStream();
-
-				//init CancellationToken
-				cancelToken = cts.Token;
+		        //when the drone receive the message bellow, it will return the confirmation
+		        string handshake_Message =
+		            "{\"controller_type\":\"computer\", \"controller_name\":\"halley\", \"d2c_port\":\"43210\", \"arstream2_client_stream_port\":\"55004\", \"arstream2_client_control_port\":\"55005\"}";
+		        streamWriter.WriteLine(handshake_Message);
+		        streamWriter.Flush();
 
 
-				pcmdThreadActive();
-				//arStreamThreadActive();
-                return 1;
-            }
+		        string receive_Message = streamReader.ReadLine();
+		        if (receive_Message == null)
+		        {
+		            Console.WriteLine("Discover failed");
+		            return -1;
+		        }
+		        else
+		        {
+		            Console.WriteLine("The message from the drone shows: " + receive_Message);
 
-            
-        }
+		            //initialize
+		            cmd = default(Command);
+		            pcmd = default(PCMD);
+
+		            //All State setting
+		            generateAllStates();
+		            generateAllSettings();
+
+		            //enable video streaming
+		            videoEnable();
+
+		            //init ARStream
+		            //initARStream();
+
+		            //init CancellationToken
+		            cancelToken = cts.Token;
+
+
+		            pcmdThreadActive();
+		            //arStreamThreadActive();
+		            return 1;
+		        }
+		    }
+		}
 
 
         public void sendCommandAdpator(ref Command cmd, int type = CommandSet.ARNETWORKAL_FRAME_TYPE_DATA, int id = CommandSet.BD_NET_CD_NONACK_ID) {
@@ -207,7 +207,9 @@ namespace drone_UDP
 
         public void cancleAllTask() {
             cts.Cancel();
-			//Console.WriteLine(frameCount);
+            //Console.WriteLine(frameCount);
+
+            d2c_client.Close(); // Disposes
         }
 
         public void generateAllStates() {
