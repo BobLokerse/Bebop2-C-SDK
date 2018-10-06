@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="BebopCommand.cs" />
     <Compile Include="CommandSet.cs" />
+    <Compile Include="Pilotting.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

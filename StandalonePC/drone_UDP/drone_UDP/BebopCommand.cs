@@ -13,8 +13,7 @@ using BebopCommandSet;
 
 namespace drone_UDP
 {
-
-    class BebopCommand
+    public class BebopCommand
     {
         private int[] seq = new int[256];
         private Command cmd;
