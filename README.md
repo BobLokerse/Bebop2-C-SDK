@@ -1,5 +1,7 @@
 # Bebop2-C#-SDK (for standalone PC & UWP)
 
+Original repo: https://github.com/u10116032/Bebop2-C-SDK
+
 0. NOTICE:
 
     Since this project is just started, it doesn't provide complete function as official SDK. I only implement the drone movement control command, which is roughly send the moving command to the drone but don't receive any return message from the drone.
